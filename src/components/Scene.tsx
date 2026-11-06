@@ -42,6 +42,7 @@ export function Scene() {
     let fpsAcc = 0;
     let fpsFrames = 0;
     let visible = true;
+    let lastBass = -1;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2) * governor.tier.scale;
@@ -91,6 +92,12 @@ export function Scene() {
       const c = scene.palette;
       const a = audio.read(scene.audioGain);
       scene.audio = a;
+      // Let CSS react to the beat too (only written when it changes).
+      const bassCss = Math.round(a[0] * 50) / 50;
+      if (bassCss !== lastBass) {
+        lastBass = bassCss;
+        document.documentElement.style.setProperty("--bass", String(bassCss));
+      }
 
       prog.set("uRes", [canvas.width, canvas.height]);
       prog.set("uTime", reduce.matches ? 12 : now / 1000);

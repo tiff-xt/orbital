@@ -65,12 +65,86 @@ html[data-webgl="off"] body {
   text-shadow: 0 0 40px color-mix(in oklab, var(--c) 35%, transparent);
 }
 
-/* Gradient wordmark that picks up the seeded palette. */
+/* ─── Wordmark ───────────────────────────────────────────
+   Face: seeded gradient with a slow sheen, a fine light border and a glow
+   that breathes with the bass (--bass is written by the scene each frame).
+   Depth: two offset outline echoes. Shine: a light sweep clipped to the text. */
+.wordmark-wrap {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
 .wordmark {
-  background: linear-gradient(100deg, var(--star) 10%, var(--c) 45%, var(--a) 75%, var(--b) 100%);
+  position: relative;
+  display: inline-block;
+  background: linear-gradient(100deg, var(--star) 5%, var(--c) 35%, var(--a) 62%, var(--b) 85%, var(--star) 100%);
+  background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* Fine light border built from four hard drop-shadows. text-stroke would
+     trace the font's overlapping contours (visible inside the A). */
+  filter: drop-shadow(1px 0 0 rgb(255 255 255 / 0.22)) drop-shadow(-1px 0 0 rgb(255 255 255 / 0.22))
+    drop-shadow(0 1px 0 rgb(255 255 255 / 0.22)) drop-shadow(0 -1px 0 rgb(255 255 255 / 0.32))
+    drop-shadow(0 0 calc(18px + var(--bass, 0) * 36px) color-mix(in oklab, var(--a) 60%, transparent));
+}
+.wordmark-echo,
+.wordmark-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+}
+/* Solid offset layers read as an extrusion, with no contour artifacts. */
+.wordmark-echo {
+  z-index: -1;
+  color: color-mix(in oklab, var(--c) 45%, var(--void));
+  transform: translate(0.025em, 0.035em);
+}
+.wordmark-echo-2 {
+  z-index: -2;
+  color: color-mix(in oklab, var(--b) 30%, var(--void));
+  transform: translate(0.05em, 0.07em);
+  filter: drop-shadow(0 0.04em 0.06em rgb(0 0 0 / 0.6));
+}
+.wordmark-shine {
+  background: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / 0.7) 50%, transparent 58%);
+  background-size: 300% 100%;
+  background-position: 120% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  mix-blend-mode: overlay;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wordmark {
+    animation: sheen 14s ease-in-out infinite alternate;
+  }
+  .wordmark-shine {
+    animation: shine 7s var(--ease-out) 1.2s infinite;
+  }
+  .wordmark-echo:not(.wordmark-echo-2) {
+    animation: drift 9s ease-in-out infinite alternate;
+  }
+}
+@keyframes sheen {
+  to {
+    background-position: 100% 0;
+  }
+}
+@keyframes shine {
+  0% {
+    background-position: 120% 0;
+  }
+  35%,
+  100% {
+    background-position: -20% 0;
+  }
+}
+@keyframes drift {
+  to {
+    transform: translate(0.035em, 0.025em);
+  }
 }
 
 /* ─── Scroll-driven motion (CSS only, no JS) ─────────────── */

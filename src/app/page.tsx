@@ -40,8 +40,18 @@ export default function Home() {
       <section className="relative flex min-h-[100svh] flex-col justify-end px-5 pb-16 pt-32 sm:px-10 sm:pb-24">
         <div className="mx-auto w-full max-w-6xl">
           <p className="mb-6 font-mono text-xs uppercase tracking-[0.3em] text-white/60">Design &amp; motion studio</p>
-          <h1 className="wordmark font-display text-[clamp(2.8rem,11.5vw,11rem)] font-extrabold leading-[0.82] tracking-[-0.03em]">
-            ORBITAL
+          <h1 className="wordmark-wrap font-display text-[clamp(2.8rem,11.5vw,11rem)] font-extrabold leading-[0.82] tracking-[-0.03em]">
+            {/* Depth: two offset outline echoes behind the face. Decorative only. */}
+            <span aria-hidden className="wordmark-echo wordmark-echo-2">
+              ORBITAL
+            </span>
+            <span aria-hidden className="wordmark-echo">
+              ORBITAL
+            </span>
+            <span className="wordmark">ORBITAL</span>
+            <span aria-hidden className="wordmark-shine">
+              ORBITAL
+            </span>
           </h1>
           <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <p className="max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">

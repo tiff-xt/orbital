@@ -3,7 +3,7 @@
  *   1. background: domain-warped fbm nebula + two parallax star layers
  *   2. planet: SDF sphere with fbm terrain, ray-marched only inside its
  *      bounding sphere (analytic test first, so empty sky costs nothing)
- *   3. rings: analytic ray–plane hit, banded dust, shadowed by the planet
+ *   3. rings: analytic ray-plane hit, banded dust, shadowed by the planet
  *   4. atmosphere: fresnel rim + volumetric-ish halo from closest approach
  *   5. warp: hyperspace streaks for page transitions
  * Audio (bass, mid, high) drives atmosphere, nebula turbulence and starlight.
@@ -98,7 +98,7 @@ vec3 normalAt(vec3 p, float t) {
     k.xyy * sdPlanet(p + k.xyy * e, t) + k.yyx * sdPlanet(p + k.yyx * e, t) +
     k.yxy * sdPlanet(p + k.yxy * e, t) + k.xxx * sdPlanet(p + k.xxx * e, t));
 }
-// Ray–sphere: returns (tNear, tFar) or (-1,-1).
+// Ray-sphere: returns (tNear, tFar) or (-1,-1).
 vec2 sphere(vec3 ro, vec3 rd, float r) {
   float b = dot(ro, rd);
   float c = dot(ro, ro) - r * r;
@@ -106,6 +106,18 @@ vec2 sphere(vec3 ro, vec3 rd, float r) {
   if (h < 0.0) return vec2(-1.0);
   h = sqrt(h);
   return vec2(-b - h, -b + h);
+}
+
+// Ring opacity at normalised radius r (1 = planet radius).
+float ringDust(float r) {
+  if (r < uRingInner || r > uRingOuter) return 0.0;
+  float edge = smoothstep(uRingInner, uRingInner + 0.05, r) * smoothstep(uRingOuter, uRingOuter - 0.12, r);
+  float dust = 0.55 + 0.45 * sin(r * 48.0 * uRingDensity + noise3(vec3(r * 12.0, 0.0, 0.0)) * 4.0);
+  dust *= 0.6 + 0.4 * noise3(vec3(r * 40.0, 3.0, 1.0));
+  // A Cassini-style gap two-thirds of the way out.
+  float gap = mix(uRingInner, uRingOuter, 0.62);
+  dust *= smoothstep(0.015, 0.045, abs(r - gap));
+  return edge * dust * 0.75;
 }
 
 void main() {
@@ -153,44 +165,78 @@ void main() {
     }
   }
 
-  // Atmosphere halo from the ray's closest approach to the planet.
-  float closest = length(cross(ro, rd));
-  float halo = exp(-max(closest - uRadius, 0.0) * 9.0) * (0.35 + bass * 0.9) * uAtmos;
-  if (dot(-ro, rd) > 0.0) col += uC * halo * 0.6;
+  // Atmosphere halo from the ray's closest approach, brighter on the lit side.
+  float tClosest = dot(-ro, rd);
+  vec3 cp = ro + rd * tClosest;
+  float closest = length(cp);
+  float haloLit = smoothstep(-0.5, 0.7, dot(cp / max(closest, 1e-4), LIGHT));
+  float halo = exp(-max(closest - uRadius, 0.0) * 10.0) * (0.3 + bass * 0.9) * uAtmos * (0.25 + 0.75 * haloLit);
+  vec3 sky = mix(uC, uStar, 0.2);
+  if (tClosest > 0.0) col += sky * halo * 0.55;
 
   if (tPlanet > 0.0) {
-    vec3 n = normalAt(pHit, t);
-    vec3 loc = planetLocal(normalize(pHit), t);
-    float h = terrain(normalize(pHit), t);
-    // Latitude bands, wobbled by terrain.
-    float band = 0.5 + 0.5 * sin(loc.y * uBands * 3.14159 + h * 6.0);
-    vec3 albedo = mix(uA, uB, band) * 0.55;
-    albedo = mix(albedo, uStar * 0.8, smoothstep(0.62, 0.78, h) * 0.6);
-    float diff = max(dot(n, LIGHT), 0.0);
-    float term = smoothstep(-0.15, 0.35, dot(n, LIGHT));
-    vec3 surf = albedo * (0.04 + diff * 1.2) * term;
-    float fres = pow(1.0 - max(dot(n, -rd), 0.0), 3.0);
-    surf += uC * fres * (0.55 + bass * 1.2) * uAtmos;
-    float spec = pow(max(dot(reflect(-LIGHT, n), -rd), 0.0), 24.0) * 0.25;
-    surf += uStar * spec;
-    col = surf;
+    vec3 sn = normalize(pHit);                       // smooth sphere normal
+    vec3 n = normalize(mix(sn, normalAt(pHit, t), 0.35)); // gentle relief, not fur
+    vec3 loc = planetLocal(sn, t);
+    float ndl = dot(n, LIGHT);
+    float mu = max(dot(sn, -rd), 0.0);
+
+    // Banded gas giant: latitude bands bent by domain-warped turbulence.
+    float warp = fbm(loc * uNoise * vec3(1.0, 3.2, 1.0) + vec3(0.0, 0.0, t * 0.01));
+    float b = loc.y * uBands * 3.14159 + (warp - 0.5) * 3.2;
+    vec3 albedo = mix(uA, uB, 0.5 + 0.5 * sin(b));
+    albedo *= 0.85 + 0.15 * sin(b * 3.1 + warp * 4.0);       // fine banding
+    float lum = dot(albedo, vec3(0.2126, 0.7152, 0.0722));
+    albedo = mix(vec3(lum), albedo, 0.72) * 0.6;              // real planets are less saturated
+
+    // Cloud deck on its own, faster rotation, with soft shadows below it.
+    vec3 cl = sn;
+    cl.xz *= rot(t * uSpin * 1.6);
+    float cloud = smoothstep(0.55, 0.82, fbm(cl * uNoise * 2.1 + 5.0));
+    vec3 cs = normalize(sn - LIGHT * 0.035);
+    cs.xz *= rot(t * uSpin * 1.6);
+    float cloudShadow = smoothstep(0.55, 0.82, fbm(cs * uNoise * 2.1 + 5.0));
+    albedo *= 1.0 - 0.35 * cloudShadow * (1.0 - cloud);
+    albedo = mix(albedo, mix(uStar, vec3(1.0), 0.5) * 0.8, cloud * 0.6);
+
+    // Shadow cast by the rings onto the planet.
+    float dl = dot(LIGHT, rn);
+    float ringShadow = 0.0;
+    if (abs(dl) > 1e-3) {
+      float tr = -dot(pHit, rn) / dl;
+      if (tr > 0.0) ringShadow = ringDust(length(pHit + LIGHT * tr) / uRadius);
+    }
+
+    // Lighting: soft terminator, limb darkening, scattering at the rim.
+    float diff = smoothstep(-0.08, 1.0, ndl);
+    vec3 surf = albedo * diff * (1.0 - ringShadow * 0.8) * 1.4;
+    surf *= 0.55 + 0.45 * pow(mu, 0.45);
+    surf += albedo * 0.015;                                   // faint ring-shine on the night side
+    float rim = pow(1.0 - mu, 4.0);
+    float litRim = smoothstep(-0.35, 0.6, dot(sn, LIGHT));
+    surf += sky * rim * litRim * (0.9 + bass * 1.4) * uAtmos;
+    surf += uB * exp(-pow(ndl * 7.0, 2.0)) * 0.05 * uAtmos;   // warm terminator band
+
+    // Anti-alias the silhouette against the sky.
+    float pxw = 2.2 * length(ro) / (1.55 * uRes.y);
+    float aa = clamp((uRadius - closest) / pxw + 0.5, 0.0, 1.0);
+    col = mix(col, surf, aa);
   }
 
   // Rings: drawn in front of the planet only when closer.
   if (tRing > 0.0 && (tPlanet < 0.0 || tRing < tPlanet)) {
     vec3 q = ro + rd * tRing;
     float r = length(q) / uRadius;
-    if (r > uRingInner && r < uRingOuter) {
-      float edge = smoothstep(uRingInner, uRingInner + 0.05, r) * smoothstep(uRingOuter, uRingOuter - 0.12, r);
-      float dust = 0.55 + 0.45 * sin(r * 48.0 * uRingDensity + noise3(vec3(r * 12.0, 0.0, 0.0)) * 4.0);
-      dust *= 0.6 + 0.4 * noise3(vec3(r * 40.0, 3.0, 1.0));
-      // Planet shadow on the rings.
+    float alpha = ringDust(r);
+    if (alpha > 0.0) {
       vec2 sh = sphere(q, LIGHT, uRadius);
-      float lit = sh.y > 0.0 ? 0.15 : 1.0;
-      float facing = 0.55 + 0.45 * abs(dot(rn, LIGHT));
-      vec3 ringCol = mix(uStar, mix(uA, uC, 0.5 + 0.5 * sin(r * 3.0)), 0.45 + 0.25 * sin(r * 6.0)) * (0.7 + bass * 0.8);
-      float alpha = edge * dust * 0.7;
-      col = mix(col, ringCol * lit * facing, alpha);
+      float lit = sh.y > 0.0 ? 0.12 : 1.0;                    // planet's shadow on the rings
+      float facing = 0.45 + 0.55 * abs(dot(rn, LIGHT));
+      // Forward scattering: dust glows when you look toward the light through it.
+      float forward = pow(max(dot(rd, LIGHT), 0.0), 6.0) * 0.8;
+      vec3 ringCol = mix(uStar, mix(uA, uC, 0.5 + 0.5 * sin(r * 3.0)), 0.45 + 0.25 * sin(r * 6.0));
+      ringCol *= (0.7 + bass * 0.8) * (facing + forward) * lit;
+      col = mix(col, ringCol, alpha);
     }
   }
 

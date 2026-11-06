@@ -11,7 +11,7 @@ const notes = [
   ],
   [
     "Analytic rings",
-    "One ray–plane intersection per pixel, banded by noise, and shadowed by casting a second ray toward the light.",
+    "One ray-plane intersection per pixel, banded by noise, and shadowed by casting a second ray toward the light.",
   ],
   [
     "Adaptive quality",

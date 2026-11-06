@@ -20,7 +20,7 @@ library.
 - **Planet:** a signed-distance sphere displaced by fractal terrain. It is
   ray-marched only inside an analytic bounding sphere, so pixels of empty sky
   skip the march entirely. Normals use the tetrahedron technique (4 samples, not 6).
-- **Rings:** one analytic ray–plane hit per pixel, banded with noise and
+- **Rings:** one analytic ray-plane hit per pixel, banded with noise and
   shadowed by casting a second ray toward the light.
 - **Atmosphere:** a fresnel rim plus a halo based on how close each ray passes to the planet.
 - **Grade:** exponential tone mapping, vignette, and dithering to stop banding.
