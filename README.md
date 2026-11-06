@@ -72,6 +72,7 @@ march steps.
   pointer and to sound, and the warp transition is skipped.
 - **No WebGL, or a lost context:** the page falls back to a CSS nebula. All
   content is real HTML on top.
+- **Wordmark:** "signal" letters charge with the seeded gradient and flare with the bass (CSS `@property` animation, no JS).
 - **Scroll motion:** the manifesto and card reveals are CSS scroll-driven
   animations (`animation-timeline: view()`), with no scroll listeners.
 

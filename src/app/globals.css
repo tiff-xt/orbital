@@ -65,13 +65,14 @@ html[data-webgl="off"] body {
   text-shadow: 0 0 40px color-mix(in oklab, var(--c) 35%, transparent);
 }
 
-/* ─── Wordmark ───────────────────────────────────────────
-   One markup, several art directions via [data-wm]. --bass is written by the
-   scene each frame, so glows can breathe with the music. */
+/* ─── Wordmark: "signal" ─────────────────────────────────
+   Faint glass letters charge up left to right with the seeded gradient and
+   scan lines. --bass is written by the scene each frame, so the glow flares
+   with the music. Reduced motion shows it fully charged and still. */
 @property --fill {
   syntax: "<percentage>";
   inherits: false;
-  initial-value: 0%;
+  initial-value: 100%;
 }
 .wm {
   position: relative;
@@ -81,158 +82,30 @@ html[data-webgl="off"] body {
 .wm-face {
   position: relative;
   display: inline-block;
-}
-.wm-layer,
-.wm-ring {
-  position: absolute;
-  pointer-events: none;
-  user-select: none;
-  display: none;
-}
-.wm-layer {
-  inset: 0;
-}
-/* Fine light border from four hard drop-shadows (text-stroke traces the
-   font's overlapping contours). */
-.wm[data-wm="extrude"] .wm-face,
-.wm[data-wm="signal"] .wm-face {
+  color: color-mix(in oklab, var(--star) 9%, transparent);
+  /* Fine light border from four hard drop-shadows (text-stroke would trace
+     the font's overlapping contours). */
   filter: drop-shadow(1px 0 0 rgb(255 255 255 / 0.22)) drop-shadow(-1px 0 0 rgb(255 255 255 / 0.22))
     drop-shadow(0 1px 0 rgb(255 255 255 / 0.22)) drop-shadow(0 -1px 0 rgb(255 255 255 / 0.32));
 }
-
-/* Extrude: seeded gradient, solid offset layers, bass glow, light sweep. */
-.wm[data-wm="extrude"] .wm-face {
-  background: linear-gradient(100deg, var(--star) 5%, var(--c) 35%, var(--a) 62%, var(--b) 85%, var(--star) 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.wm[data-wm="extrude"] .wm-face::after {
-  content: none;
-}
-.wm[data-wm="extrude"] {
-  filter: drop-shadow(0 0 calc(18px + var(--bass, 0) * 36px) color-mix(in oklab, var(--a) 45%, transparent));
-}
-.wm[data-wm="extrude"] .wm-echo {
-  display: block;
-  z-index: -1;
-  color: color-mix(in oklab, var(--c) 45%, var(--void));
-  transform: translate(0.025em, 0.035em);
-}
-.wm[data-wm="extrude"] .wm-echo-2 {
-  z-index: -2;
-  color: color-mix(in oklab, var(--b) 30%, var(--void));
-  transform: translate(0.05em, 0.07em);
-}
-
-/* Chrome: a horizon-line metal gradient that reflects the palette below it. */
-.wm[data-wm="chrome"] .wm-face {
-  background: linear-gradient(
-    180deg,
-    #fbfcff 0%,
-    #d5dbf5 24%,
-    #7d84a6 45%,
-    #161927 50%,
-    color-mix(in oklab, var(--a) 55%, #1a1c28) 58%,
-    color-mix(in oklab, var(--c) 70%, #ffffff) 82%,
-    #ffffff 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 -1px 0 rgb(255 255 255 / 0.8)) drop-shadow(0 2px 0 rgb(0 0 0 / 0.7))
-    drop-shadow(0 0 calc(14px + var(--bass, 0) * 30px) color-mix(in oklab, var(--c) 40%, transparent));
-}
-
-/* Shared light sweep (extrude, chrome). */
-.wm[data-wm="extrude"] .wm-shine,
-.wm[data-wm="chrome"] .wm-shine {
-  display: block;
-  background: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / 0.75) 50%, transparent 58%);
-  background-size: 300% 100%;
-  background-position: 120% 0;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  mix-blend-mode: overlay;
-}
-
-/* Orbit: flat star-white letters, a glowing ring passing behind and in front. */
-.wm[data-wm="orbit"] .wm-face {
-  color: var(--star);
-  text-shadow: 0 0 40px color-mix(in oklab, var(--c) 25%, transparent);
-}
-.wm[data-wm="orbit"] .wm-ring {
-  display: block;
-  inset: -22% -5%;
-  width: 110%;
-  height: 144%;
-  overflow: visible;
-  filter: drop-shadow(0 0 calc(6px + var(--bass, 0) * 14px) var(--c));
-}
-.wm[data-wm="orbit"] .wm-ring-back {
-  z-index: -1;
-  opacity: 0.55;
-}
-.wm[data-wm="orbit"] .wm-ring-front {
-  z-index: 1;
-}
-
-/* Signal: faint glass letters that charge up left to right, with scan lines. */
-.wm[data-wm="signal"] .wm-face {
-  color: color-mix(in oklab, var(--star) 9%, transparent);
-}
-.wm[data-wm="signal"] .wm-signal {
-  display: block;
+.wm-signal {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
   background:
     repeating-linear-gradient(0deg, rgb(0 0 0 / 0.28) 0 1px, transparent 1px 4px),
     linear-gradient(90deg, var(--c), var(--a) 55%, var(--b));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  --fill: 100%;
   mask-image: linear-gradient(90deg, #000 var(--fill), rgb(0 0 0 / 0.15) calc(var(--fill) + 1%));
   filter: drop-shadow(0 0 calc(10px + var(--bass, 0) * 28px) color-mix(in oklab, var(--c) 60%, transparent))
     brightness(calc(1 + var(--bass, 0) * 0.35));
 }
-
 @media (prefers-reduced-motion: no-preference) {
-  .wm[data-wm="extrude"] .wm-face {
-    animation: wm-sheen 14s ease-in-out infinite alternate;
-  }
-  .wm[data-wm="extrude"] .wm-echo:not(.wm-echo-2) {
-    animation: wm-drift 9s ease-in-out infinite alternate;
-  }
-  .wm .wm-shine {
-    animation: wm-shine 7s var(--ease-out) 1.2s infinite;
-  }
-  .wm[data-wm="signal"] .wm-signal {
+  .wm-signal {
     animation: wm-charge 6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wm-ring animateMotion {
-    display: none;
-  }
-}
-@keyframes wm-sheen {
-  to {
-    background-position: 100% 0;
-  }
-}
-@keyframes wm-shine {
-  0% {
-    background-position: 120% 0;
-  }
-  35%,
-  100% {
-    background-position: -20% 0;
-  }
-}
-@keyframes wm-drift {
-  to {
-    transform: translate(0.035em, 0.025em);
   }
 }
 @keyframes wm-charge {
