@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/* Palette tokens are set per-seed before first paint (see identity.ts). */
+:root {
+  --void: #04050d;
+  --a: #7c5cff;
+  --b: #ff4fa3;
+  --c: #5ee7ff;
+  --star: #ffe9c2;
+  --text: #eef0ff;
+  --muted: #9aa0c3;
+  --line: rgb(255 255 255 / 0.1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-void: var(--void);
+  --color-a: var(--a);
+  --color-b: var(--b);
+  --color-c: var(--c);
+  --color-star: var(--star);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-syne), var(--font-geist-sans), sans-serif;
+}
+
+html {
+  background: var(--void);
+  color: var(--text);
+}
+body {
+  font-family: var(--font-sans);
+  background: transparent;
+}
+::selection {
+  background: var(--a);
+  color: white;
+}
+:focus-visible {
+  outline: 2px solid var(--c);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* No WebGL: a CSS nebula stands in for the scene. */
+html[data-webgl="off"] body {
+  background:
+    radial-gradient(60% 50% at 75% 35%, color-mix(in oklab, var(--a) 45%, transparent), transparent 70%),
+    radial-gradient(50% 40% at 20% 80%, color-mix(in oklab, var(--b) 30%, transparent), transparent 70%), var(--void);
+  background-attachment: fixed;
+}
+
+.glass {
+  background: rgb(10 12 28 / 0.45);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.text-glow {
+  text-shadow: 0 0 40px color-mix(in oklab, var(--c) 35%, transparent);
+}
+
+/* Gradient wordmark that picks up the seeded palette. */
+.wordmark {
+  background: linear-gradient(100deg, var(--star) 10%, var(--c) 45%, var(--a) 75%, var(--b) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ─── Scroll-driven motion (CSS only, no JS) ─────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* Manifesto: each word lights up as it crosses the viewport. */
+    .scrub-word {
+      animation: scrub linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 45%;
+    }
+    @keyframes scrub {
+      from {
+        opacity: 0.16;
+        filter: blur(2px);
+      }
+      to {
+        opacity: 1;
+        filter: none;
+      }
+    }
+    .rise {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 48px, 0) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+  /* Content dims while the sky warps between pages. */
+  html[data-warping] main {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  main {
+    transition:
+      opacity 420ms var(--ease-out),
+      filter 420ms var(--ease-out);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-moon animateMotion {
+    display: none;
+  }
+}
+
+input[type="range"] {
+  accent-color: var(--c);
+}
+
+html[data-webgl="off"] canvas {
+  display: none;
+}
