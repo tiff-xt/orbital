@@ -31,9 +31,10 @@ const notes = [
 
 export default function LabPage() {
   return (
-    <main className="min-h-dvh px-5 pb-28 pt-28 sm:px-10">
+    <main className="min-h-dvh px-5 pb-48 pt-28 sm:px-10 lg:pb-28">
       <Lab />
-      <section className="max-w-md space-y-4 lg:mt-[40vh]">
+      {/* Phones and tablets: notes start below the planet; desktop: beside the panel. */}
+      <section className="mt-[46svh] max-w-md space-y-4 lg:mt-[40vh]">
         <p className="font-mono text-xs uppercase tracking-[0.3em] text-white/60">How it works</p>
         {notes.map(([t, b]) => (
           <div key={t} className="glass rounded-2xl p-5">

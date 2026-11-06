@@ -23,6 +23,8 @@ class SceneState {
   warp = 0;
   /** Where the planet sits: beside the hero copy, or clear of the lab panel. */
   layout: "hero" | "lab" = "hero";
+  /** Lab controls sheet expanded (phones/tablets): lift the planet above it. */
+  sheetOpen = false;
   stats: Stats = { fps: 0, frameMs: 0, tier: "high", scale: 1, steps: 64 };
 
   private listeners = new Set<Listener>();

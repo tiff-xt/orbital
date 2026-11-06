@@ -187,3 +187,12 @@ input[type="range"] {
 html[data-webgl="off"] canvas {
   display: none;
 }
+
+/* Lab controls as a bottom sheet on phones/tablets: solid enough that the
+   notes scrolling underneath don't bleed through the glass. */
+@media (max-width: 1023.98px) {
+  .lab-sheet {
+    background: rgb(9 11 24);
+    box-shadow: 0 -12px 40px rgb(0 0 0 / 0.45);
+  }
+}

@@ -57,7 +57,10 @@ export function Scene() {
 
     const planetPos = (): [number, number] => {
       const aspect = innerWidth / innerHeight;
-      if (scene.layout === "lab") return aspect > 1.1 ? [-0.18 * aspect, 0.05] : [0, 0.32];
+      if (scene.layout === "lab") {
+        if (aspect > 1.1) return [-0.18 * aspect, scene.sheetOpen && innerWidth < 1024 ? 0.22 : 0.05];
+        return [0, scene.sheetOpen ? 0.4 : 0.32];
+      }
       // Wide screens: planet right of the headline. Tall screens: above it.
       return aspect > 1.1 ? [Math.min(0.4 * aspect, 0.6), 0.06] : [0.05, 0.3];
     };
