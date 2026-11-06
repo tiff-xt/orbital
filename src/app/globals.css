@@ -168,9 +168,15 @@ html[data-webgl="off"] body {
       filter 420ms var(--ease-out);
   }
 }
+.logo-moon-still {
+  display: none;
+}
 @media (prefers-reduced-motion: reduce) {
-  .logo-moon animateMotion {
+  .logo-moon {
     display: none;
+  }
+  .logo-moon-still {
+    display: inline;
   }
 }
 

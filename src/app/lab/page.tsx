@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
+import { baseOpenGraph, baseTwitter } from "@/lib/site";
 import { Lab } from "./Lab";
 
-export const metadata: Metadata = { title: "Lab · Orbital" };
+const description =
+  "Every parameter of Orbital's ray-marched planet as a live control. Tune it, then share the link to your planet.";
+
+export const metadata: Metadata = {
+  title: "Lab",
+  description,
+  alternates: { canonical: "/lab" },
+  openGraph: { ...baseOpenGraph, title: "Lab · Orbital", description, url: "/lab" },
+  twitter: { ...baseTwitter, title: "Lab · Orbital", description },
+};
 
 const notes = [
   ["One shader", "The entire sky is a single fragment shader: no meshes, no textures, no 3D engine."],

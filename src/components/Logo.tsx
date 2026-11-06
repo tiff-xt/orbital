@@ -27,6 +27,8 @@ export function Logo({ size = 28 }: { size?: number }) {
         <circle r="2.2" fill="var(--c)" className="logo-moon">
           <animateMotion dur="6s" repeatCount="indefinite" path="M 38 20 A 18 6.5 0 1 1 2 20 A 18 6.5 0 1 1 38 20" />
         </circle>
+        {/* Parked moon for reduced motion (SMIL ignores CSS, so the animated one is hidden instead). */}
+        <circle cx="38" cy="20" r="2.2" fill="var(--c)" className="logo-moon-still" />
       </g>
     </svg>
   );

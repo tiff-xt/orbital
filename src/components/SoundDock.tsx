@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { audio, type AudioMode } from "@/lib/audio/engine";
 import { scene } from "@/lib/sceneState";
 import { useSceneVersion } from "./useScene";
@@ -10,25 +10,30 @@ const MODES: { id: AudioMode; label: string }[] = [
   { id: "mic", label: "Mic" },
 ];
 
+/** The last audio failure, shown by the dock whichever button caused it. */
+let audioError: string | null = null;
+
 export async function setAudioMode(mode: AudioMode): Promise<string | null> {
   try {
     if (mode === "off") audio.stop();
     else await audio.start(mode);
-    return null;
+    audioError = null;
   } catch (err) {
     audio.stop();
-    return err instanceof DOMException && err.name === "NotAllowedError"
-      ? "Microphone permission was declined."
-      : "Audio isn't available in this browser.";
+    audioError =
+      err instanceof DOMException && err.name === "NotAllowedError"
+        ? "Microphone permission was declined."
+        : "Audio isn't available in this browser.";
   } finally {
     scene.emit();
   }
+  return audioError;
 }
 
 /** Floating sound control with a live three-band meter. */
 export function SoundDock() {
   const mode = useSceneVersion(() => audio.mode, "off" as AudioMode);
-  const [error, setError] = useState<string | null>(null);
+  const error = useSceneVersion(() => audioError, null);
   const bars = useRef<(HTMLSpanElement | null)[]>([]);
 
   useEffect(() => {
@@ -46,13 +51,14 @@ export function SoundDock() {
   }, [mode]);
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
-      {error && (
-        <p role="alert" className="glass rounded-xl px-3 py-2 text-xs text-[color:var(--star)]">
-          {error}
-        </p>
-      )}
-      <div role="group" aria-label="Sound" className="glass flex items-center gap-1 rounded-full p-1 pl-3">
+    <aside
+      aria-label="Sound"
+      className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2 sm:bottom-6 sm:right-6"
+    >
+      <p role="alert" className="empty:hidden glass rounded-xl px-3 py-2 text-xs text-[color:var(--star)]">
+        {error}
+      </p>
+      <div role="group" aria-label="Sound source" className="glass flex items-center gap-1 rounded-full p-1 pl-3">
         <span aria-hidden className="mr-1 flex h-4 items-end gap-[3px]">
           {[0, 1, 2].map((i) => (
             <span
@@ -70,13 +76,13 @@ export function SoundDock() {
             key={m.id}
             type="button"
             aria-pressed={mode === m.id}
-            onClick={async () => setError(await setAudioMode(m.id))}
+            onClick={() => setAudioMode(m.id)}
             className="rounded-full px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-white/70 transition-colors hover:text-white aria-pressed:bg-white/15 aria-pressed:text-white"
           >
             {m.label}
           </button>
         ))}
       </div>
-    </div>
+    </aside>
   );
 }

@@ -1,4 +1,5 @@
 import { identity, normalizeSeed, type Identity, type Planet, PALETTES } from "./identity";
+import { resolveLab, type LabOverrides } from "./labParams";
 
 /**
  * Per-frame scene inputs, shared by React islands and the render loop.
@@ -16,7 +17,7 @@ class SceneState {
       "orbital",
   );
   /** Lab overrides on top of the seeded identity. */
-  overrides: Partial<Planet> & { paletteIndex?: number } = {};
+  overrides: LabOverrides = {};
   audio: [number, number, number] = [0, 0, 0];
   audioGain = 1;
   warp = 0;
@@ -28,10 +29,10 @@ class SceneState {
   private warpAnim = 0;
 
   get planet(): Planet {
-    return { ...this.identity.planet, ...this.overrides };
+    return resolveLab(this.identity, this.overrides).planet;
   }
   get palette() {
-    return PALETTES[this.overrides.paletteIndex ?? this.identity.paletteIndex];
+    return PALETTES[resolveLab(this.identity, this.overrides).paletteIndex];
   }
 
   setSeed(seed: string) {

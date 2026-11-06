@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { decodeLab, encodeLab } from "@/lib/labParams";
+import { identity } from "@/lib/identity";
+import { decodeLab, encodeLab, resolveLab } from "@/lib/labParams";
 
 describe("lab URL state", () => {
   it("round-trips overrides", () => {
@@ -15,5 +16,21 @@ describe("lab URL state", () => {
   it("repairs an inverted ring", () => {
     const out = decodeLab(new URLSearchParams("ringInner=1.9&ringOuter=1.6"), 4);
     expect(out.ringOuter).toBeGreaterThan(out.ringInner!);
+  });
+});
+
+describe("resolveLab", () => {
+  it("layers overrides on the seeded identity without mutating it", () => {
+    const id = identity("orbital");
+    const before = structuredClone(id.planet);
+    const out = resolveLab(id, { radius: 0.6, paletteIndex: (id.paletteIndex + 1) % 4 });
+    expect(out.planet).toEqual({ ...before, radius: 0.6 });
+    expect(out.paletteIndex).toBe((id.paletteIndex + 1) % 4);
+    expect(id.planet).toEqual(before);
+  });
+
+  it("is deterministic for the same seed, so server and client renders agree", () => {
+    expect(resolveLab(identity("orbital"), {})).toEqual(resolveLab(identity("orbital"), {}));
+    expect(resolveLab(identity("orbital"), {}).paletteIndex).toBe(identity("orbital").paletteIndex);
   });
 });

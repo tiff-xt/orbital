@@ -1,4 +1,4 @@
-import type { Planet } from "./identity";
+import type { Identity, Planet } from "./identity";
 
 /** Lab controls: ranges, labels and the uniform each one drives. */
 export type Control = { key: keyof Planet; label: string; min: number; max: number; step: number; group: string };
@@ -16,10 +16,20 @@ export const CONTROLS: Control[] = [
   { key: "ringDensity", label: "Dust density", min: 0.2, max: 2.5, step: 0.05, group: "Rings" },
 ];
 
+export type LabOverrides = Partial<Planet> & { paletteIndex?: number };
+
+/** The planet and palette actually shown: the seeded identity with lab overrides on top. */
+export function resolveLab(identity: Identity, { paletteIndex, ...planet }: LabOverrides) {
+  return {
+    planet: { ...identity.planet, ...planet },
+    paletteIndex: paletteIndex ?? identity.paletteIndex,
+  };
+}
+
 const clamp = (v: number, c: Control) => Math.min(c.max, Math.max(c.min, v));
 
 /** Lab state ⇄ URL, so any configuration is a shareable link. */
-export function encodeLab(overrides: Partial<Planet> & { paletteIndex?: number }): URLSearchParams {
+export function encodeLab(overrides: LabOverrides): URLSearchParams {
   const p = new URLSearchParams();
   for (const c of CONTROLS) {
     const v = overrides[c.key];

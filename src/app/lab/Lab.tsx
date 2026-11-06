@@ -1,18 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
 import { PALETTES, randomSeed } from "@/lib/identity";
-import { CONTROLS, decodeLab, encodeLab } from "@/lib/labParams";
+import { CONTROLS, decodeLab, encodeLab, resolveLab, type LabOverrides } from "@/lib/labParams";
 import { scene } from "@/lib/sceneState";
-import { useSceneVersion } from "@/components/useScene";
+import { useIdentity, useSceneVersion } from "@/components/useScene";
 
-const NO_OVERRIDES = {};
+const NO_OVERRIDES: LabOverrides = {};
 const groups = [...new Set(CONTROLS.map((c) => c.group))];
 
 export function Lab() {
-  // Re-render on any scene change (seed, overrides, audio mode).
-  const version = useSceneVersion(() => scene.overrides, NO_OVERRIDES);
-  const planet = scene.planet;
-  const paletteIndex = scene.overrides.paletteIndex ?? scene.identity.paletteIndex;
+  // Read through snapshots (not `scene` directly) so the first client render
+  // matches the server HTML; the visitor's own seed is applied right after.
+  const id = useIdentity();
+  const overrides = useSceneVersion(() => scene.overrides, NO_OVERRIDES);
+  const { planet, paletteIndex } = resolveLab(id, overrides);
   const [stats, setStats] = useState(scene.stats);
   const [audioLevels, setAudioLevels] = useState(scene.audio);
   const [gain, setGain] = useState(scene.audioGain);
@@ -32,7 +33,7 @@ export function Lab() {
     params.set("seed", scene.identity.seed);
     url.search = params.toString();
     history.replaceState(null, "", url);
-  }, [version]);
+  }, [id, overrides]);
 
   useEffect(() => {
     scene.layout = "lab";
@@ -147,7 +148,7 @@ export function Lab() {
             <label htmlFor="ctl-gain" className="text-white/80">
               Sensitivity
             </label>
-            <output className="font-mono text-white/50">{gain.toFixed(1)}×</output>
+            <output htmlFor="ctl-gain" className="font-mono text-white/50">{gain.toFixed(1)}×</output>
           </div>
           <input
             id="ctl-gain"
